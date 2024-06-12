@@ -48,7 +48,7 @@ Open the Django admin at http://127.0.0.1:8000/admin/ and log in using the super
 ### using httpie:
 - http POST http://127.0.0.1:8000/api/register/ username="name" password="password"
 ### About this API endpoint:
-- here this endpoint is used to create a user.
+- here this endpoint is used to create a user. Get response of Authorization Token key.
 
 ## Login User 
 - http POST http://127.0.0.1:8000/api/login/ username="name" password="password"
