@@ -144,9 +144,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # For token authentication
-        'rest_framework.authentication.SessionAuthentication',  # Optionally, you can also include session authentication
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # This allows unrestricted access to the register endpoint
     ],
 }

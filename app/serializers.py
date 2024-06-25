@@ -3,11 +3,12 @@ from .models import vendor,purchaseOrder,Performance
 
 from django.contrib.auth.models import  User
 
-class RegisterSerilizer(serializers.Serializer):
+class RegisterSerializer(serializers.ModelSerializer):
 
     """RegisterSerilizer"""
-    username = serializers.CharField()
-    password = serializers.CharField()
+    class Meta:
+        model = User
+        fields = ['username', 'password']
 
     def validate(self, data):
         """Validation"""
@@ -26,23 +27,41 @@ class RegisterSerilizer(serializers.Serializer):
 
 class LoginSerializer(serializers.Serializer):
 
-    """LoginSerializer"""
+    """Serializer for user login"""
     username = serializers.CharField()
-    password = serializers.CharField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, data):
+        """Validate user credentials"""
+        username = data.get('username')
+        password = data.get('password')
+
+        if username and password:
+            user = User.objects.filter(username=username).first()
+            if user and user.check_password(password):
+                data['user'] = user
+            else:
+                raise serializers.ValidationError('Incorrect username or password')
+        else:
+            raise serializers.ValidationError('Both username and password are required')
+
+        return data
 
 class VendorSerializers(serializers.ModelSerializer):
 
     """VendorSerializers"""
     class Meta:
         model = vendor
-        fields = '__all__'    """Return all elements of Tabel"""
+        fields = '__all__'
+        """Return all elements of Tabel"""
 
 class PurchaseOrderSerializers(serializers.ModelSerializer):
 
     """PurchaseOrderSerializers"""
     class Meta:
         model =  purchaseOrder
-        fields = '__all__'       """Return all elements of Tabel"""
+        fields = '__all__'
+        """Return all elements of Tabel"""
 
 
 class PerformanceSerializers(serializers.ModelSerializer):

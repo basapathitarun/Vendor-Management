@@ -1,13 +1,10 @@
 from django.urls import path
 from .views import VendorAPI,VendorAPI_ID,PurchaseOrderAPI,PurchaseOrderAPI_ID\
-    ,VendorPerformanceView,AcknowledgePurchaseOrderView,LoginAPI,RegisterAPI
-
-
-
+    ,VendorPerformanceView,AcknowledgePurchaseOrderView,RegisterAPI,LoginAPI
 
 urlpatterns = [
-    # path('login/',LoginAPI.as_view()),
-    # path('register/',RegisterAPI.as_view()),
+    path('login/',LoginAPI.as_view()),
+    path('register/',RegisterAPI.as_view()),
     path('vendor/',VendorAPI.as_view(),name='vendor'),
     path('vendor/<int:pk>/',VendorAPI_ID.as_view()),
     path('purchase_orders/',PurchaseOrderAPI.as_view()),

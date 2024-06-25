@@ -1,36 +1,40 @@
 from django.db.models import Avg
-from rest_framework.decorators import APIView,api_view
+from rest_framework.decorators import APIView
 from rest_framework.response import  Response
 from rest_framework import status,generics
-from .serializers import VendorSerializers,PurchaseOrderSerializers,PerformanceSerializers,RegisterSerilizer,LoginSerializer
+from .serializers import VendorSerializers,PurchaseOrderSerializers,PerformanceSerializers,RegisterSerializer,LoginSerializer
 from .models import vendor,purchaseOrder,Performance
-# from rest_framework.authentication import TokenAuthentication
-# from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
 from django.db.models import F, ExpressionWrapper, fields
 
 
 class LoginAPI(APIView):
-    serializer_class = LoginSerializer
-
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.get(username=serializer.validated_data['username'])
+        user = serializer.validated_data['user']
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'status': True, 'message': 'User logged in', 'token': token.key}, status=status.HTTP_201_CREATED)
+        return Response({'status': True, 'message': 'User logged in', 'token': token.key},
+                        status=status.HTTP_201_CREATED)
+
 
 class RegisterAPI(APIView):
     def post(self, request):
-        serializer = RegisterSerilizer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'status': True, 'message': 'User created'}, status=status.HTTP_201_CREATED)
+        serializer = RegisterSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({'status': 403, 'errors': serializer.errors, 'message': 'some error'})
+
+        user = serializer.save()
+        token_obj, _ = Token.objects.get_or_create(user=user)
+
+        return Response({'status': True, 'message': 'User created','token':str(token_obj)}, status=status.HTTP_201_CREATED)
 
 class VendorAPI(APIView):
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     """List all vendor"""
 
@@ -50,8 +54,8 @@ class VendorAPI(APIView):
 
 
 class VendorAPI_ID(APIView):
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     """Retrieve a specific vendor's details"""
     def get(self, request,pk):
@@ -85,8 +89,8 @@ class VendorAPI_ID(APIView):
 
 
 class PurchaseOrderAPI(APIView):
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     """Create a purchase order"""
     def post(self,request):
@@ -109,8 +113,8 @@ class PurchaseOrderAPI(APIView):
         return Response(serializer.data)
 
 class PurchaseOrderAPI_ID(APIView):
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     """Retrieve details of specific purchase order"""
     def get(self,request,pk):
@@ -153,8 +157,9 @@ class PurchaseOrderAPI_ID(APIView):
         query.delete()
 
 class VendorPerformanceView(generics.RetrieveAPIView):
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     queryset = Performance.objects.all()
     serializer_class = PerformanceSerializers
 
@@ -166,8 +171,9 @@ class VendorPerformanceView(generics.RetrieveAPIView):
 
 
 class AcknowledgePurchaseOrderView(generics.UpdateAPIView):
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     queryset = purchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializers
 
@@ -201,27 +207,5 @@ class AcknowledgePurchaseOrderView(generics.UpdateAPIView):
 
 
 
-# class AcknowledgePurchaseOrderView(generics.UpdateAPIView):
-#     # authentication_classes = [TokenAuthentication]
-#     # permission_classes = [IsAuthenticated]
-#     queryset = purchaseOrder.objects.all()
-#     serializer_class = PurchaseOrderSerializers
-#
-#     def create(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         instance.acknowledgment_date = request.data.get('acknowledgement_date')    #timezone.now()
-#         instance.save()
-#         response_times = purchaseOrder.objects.filter(vendor=instance.vendor, acknowledgement_date__isnull=False).values_list('acknowledgement_date', 'issue_date')
-#         average_response_time = sum(abs((ack_date - issue_date).total_seconds()) for ack_date, issue_date in response_times) #/ len(response_times)
-#         if response_times:
-#             average_response_time = average_response_time / len(response_times)
-#         else:
-#             average_response_time = 0  # Avoid division by zero if there are no response times
-#         instance.vendor.average_response_time = average_response_time
-#         instance.vendor.save()
-#
-#         query = Performance.objects.get(vendor=instance.vendor)
-#         serializers = PerformanceSerializers(query)
-#         serializers.data['average_response_time'] = average_response_time
-#         return Response({'acknowledgment_date': instance.acknowledgement_date})
+
 
